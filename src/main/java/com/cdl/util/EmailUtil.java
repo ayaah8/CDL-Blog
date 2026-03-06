@@ -7,8 +7,8 @@ import java.util.Properties;
 public class EmailUtil {
 
     // ⚠️ À MODIFIER : Remplace par ton adresse email et ton mot de passe d'application
-    private static final String SENDER_EMAIL = "cdl.blog.app@gmail.com"; 
-    private static final String SENDER_PASSWORD = "ablaterttayicoql"; 
+	private static final String SENDER_EMAIL = System.getenv("SENDER_EMAIL");
+	private static final String SENDER_PASSWORD = System.getenv("SENDER_PASSWORD");
 
     private static Session getSession() {
         Properties props = new Properties();
