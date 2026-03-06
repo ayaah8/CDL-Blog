@@ -1,9 +1,6 @@
 package com.cdl.util;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.sql.*;
-import java.util.Properties;
 
 public class DBUtil {
 
@@ -13,29 +10,42 @@ public class DBUtil {
     private static final String PASS;
 
     static {
-        try (InputStream in = DBUtil.class.getClassLoader()
-                .getResourceAsStream("database.properties")) {
-            Properties p = new Properties();
-            p.load(in);
-            DRIVER = p.getProperty("db.driver");
-            URL    = p.getProperty("db.url");
-            USER   = p.getProperty("db.username");
-            PASS   = p.getProperty("db.password");
+        try {
+            // Le driver MySQL pour les versions récentes (Connector/J 8+)
+            DRIVER = "com.mysql.cj.jdbc.Driver";
+            
+            // On récupère les informations de connexion depuis les variables Railway
+            URL    = System.getenv("MYSQL_URL");
+            USER   = System.getenv("MYSQLUSER");
+            PASS   = System.getenv("MYSQLPASSWORD");
+            
+            // Chargement du driver
             Class.forName(DRIVER);
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (ClassNotFoundException e) {
             throw new ExceptionInInitializerError("DBUtil init failed: " + e.getMessage());
         }
     }
 
+    /**
+     * Établit la connexion à la base de données Railway
+     */
     public static Connection getConnection() throws SQLException {
+        if (URL == null || USER == null || PASS == null) {
+            throw new SQLException("Les variables d'environnement MySQL ne sont pas configurées sur Railway.");
+        }
         return DriverManager.getConnection(URL, USER, PASS);
     }
 
+    /**
+     * Ferme les ressources JDBC (ResultSet, Statement, Connection)
+     */
     public static void close(Connection c, Statement s, ResultSet r) {
         try { if (r != null) r.close(); } catch (SQLException ignored) {}
         try { if (s != null) s.close(); } catch (SQLException ignored) {}
         try { if (c != null) c.close(); } catch (SQLException ignored) {}
     }
 
-    public static void close(Connection c, Statement s) { close(c, s, null); }
+    public static void close(Connection c, Statement s) { 
+        close(c, s, null); 
+    }
 }
