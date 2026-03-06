@@ -6,16 +6,23 @@ import java.util.Properties;
 
 public class EmailUtil {
 
-    // ⚠️ À MODIFIER : Remplace par ton adresse email et ton mot de passe d'application
-	private static final String SENDER_EMAIL = System.getenv("SENDER_EMAIL");
-	private static final String SENDER_PASSWORD = System.getenv("SENDER_PASSWORD");
+    // ⚠️ L'application ira chercher ces valeurs dans les Variables Railway
+    private static final String SENDER_EMAIL = System.getenv("SENDER_EMAIL");
+    private static final String SENDER_PASSWORD = System.getenv("SENDER_PASSWORD");
 
     private static Session getSession() {
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true");
+        
+        // Configuration SSL pour Railway (Port 465)
+        props.put("mail.smtp.ssl.enable", "true");
         props.put("mail.smtp.host", "smtp.gmail.com");
-        props.put("mail.smtp.port", "587");
+        props.put("mail.smtp.port", "465");
+        
+        // 🛑 AJOUT CRUCIAL : Limite de temps (Timeouts) pour éviter le chargement infini
+        props.put("mail.smtp.connectiontimeout", "10000");
+        props.put("mail.smtp.timeout", "10000");
+        props.put("mail.smtp.writetimeout", "10000");
 
         return Session.getInstance(props, new Authenticator() {
             @Override
