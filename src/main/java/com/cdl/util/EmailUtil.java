@@ -1,64 +1,58 @@
 package com.cdl.util;
 
-import jakarta.mail.*;
-import jakarta.mail.internet.InternetAddress;
-import jakarta.mail.internet.MimeMessage;
-import java.util.Properties;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 public class EmailUtil {
 
-    // Variables lues depuis l'onglet "Variables" de Railway
+    // On récupère les variables de Railway
     private static final String SENDER_EMAIL = System.getenv("SENDER_EMAIL");
-    private static final String SENDER_PASSWORD = System.getenv("SENDER_PASSWORD");
+    private static final String BREVO_API_KEY = System.getenv("SENDER_PASSWORD");
 
-    private static Session getSession() {
-        Properties props = new Properties();
-        
-        // --- NOUVELLE CONFIGURATION BREVO ---
-        props.put("mail.smtp.host", "smtp-relay.brevo.com");
-        props.put("mail.smtp.port", "2525"); // Ce port traverse le blocage de Railway
-        props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.smtp.starttls.required", "true");
-        props.put("mail.smtp.ssl.protocols", "TLSv1.2");
-        props.put("mail.smtp.connectiontimeout", "10000");
-        props.put("mail.smtp.timeout", "10000");
-        props.put("mail.smtp.writetimeout", "10000");
-
-        return Session.getInstance(props, new Authenticator() {
-            @Override
-            protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(SENDER_EMAIL, SENDER_PASSWORD);
-            }
-        });
-    }
-
-    // Méthode pour le mot de passe oublié (2 arguments)
     public static boolean sendPasswordResetEmail(String recipientEmail, String resetLink) {
-        return sendEmail(recipientEmail, "Réinitialisation de mot de passe", 
-            "Bonjour, \n\nVoici votre lien de réinitialisation : " + resetLink);
+        return sendEmailViaApi(recipientEmail, "Réinitialisation de mot de passe", 
+            "Bonjour, <br><br>Voici votre lien de réinitialisation : " + resetLink);
     }
 
-    // Méthode pour l'inscription (3 arguments)
     public static boolean sendVerificationEmail(String recipientEmail, String code, String username) {
-        return sendEmail(recipientEmail, "Vérification de votre compte", 
-            "Bonjour " + username + ", \n\nVotre code de vérification est : " + code);
+        return sendEmailViaApi(recipientEmail, "Vérification de votre compte", 
+            "Bonjour " + username + ", <br><br>Votre code de vérification est : <b>" + code + "</b>");
     }
 
-    // Méthode principale d'envoi
-    private static boolean sendEmail(String recipientEmail, String subject, String content) {
-        if (SENDER_EMAIL == null || SENDER_PASSWORD == null) return false;
+    // NOUVELLE MÉTHODE : Envoi via l'API Web de Brevo (100% garanti de passer Railway)
+    private static boolean sendEmailViaApi(String recipientEmail, String subject, String htmlContent) {
+        if (SENDER_EMAIL == null || BREVO_API_KEY == null) return false;
+
         try {
-            Message message = new MimeMessage(getSession());
-            
-            // On met SENDER_EMAIL comme expéditeur (l'email validé sur Brevo)
-            message.setFrom(new InternetAddress(SENDER_EMAIL, "Support CDL Blog"));
-            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipientEmail));
-            message.setSubject(subject);
-            message.setText(content);
-            
-            Transport.send(message);
-            return true;
+            URL url = new URL("https://api.brevo.com/v3/smtp/email");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Accept", "application/json");
+            conn.setRequestProperty("Content-Type", "application/json");
+            // On utilise la clé API stockée dans Railway
+            conn.setRequestProperty("api-key", BREVO_API_KEY);
+            conn.setDoOutput(true);
+
+            // Création du format JSON attendu par Brevo
+            String jsonInputString = "{"
+                + "\"sender\": {\"name\": \"Support CDL Blog\", \"email\": \"" + SENDER_EMAIL + "\"},"
+                + "\"to\": [{\"email\": \"" + recipientEmail + "\"}],"
+                + "\"subject\": \"" + subject + "\","
+                + "\"htmlContent\": \"" + htmlContent + "\""
+                + "}";
+
+            // Envoi de la requête
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            }
+
+            int responseCode = conn.getResponseCode();
+            // 200 ou 201 signifie que Brevo a bien envoyé l'email !
+            return (responseCode == 200 || responseCode == 201);
+
         } catch (Exception e) {
             e.printStackTrace();
             return false;
