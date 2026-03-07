@@ -75,16 +75,12 @@
                 <div class="field">
                     <label><fmt:message key="profile.newpassword"/></label>
                     <input type="password" name="newPassword" required minlength="6" placeholder="••••••••">
-                    <button type="button" class="toggle-pwd" onclick="togglePwd()">
-                            <i class="fas fa-eye" id="eyeIcon"></i>
-                        </button>
+                   
                 </div>
                 <div class="field">
                     <label><fmt:message key="profile.confirmpassword"/></label>
                     <input type="password" name="confirmPassword" required minlength="6" placeholder="••••••••">
-                    <button type="button" class="toggle-pwd" onclick="togglePwd()">
-                            <i class="fas fa-eye" id="eyeIcon"></i>
-                        </button>
+                    
                 </div>
                 <button type="submit" class="submit-btn" style="background:var(--indigo);">
                     <i class="fas fa-key"></i> <fmt:message key="profile.changepassword"/>
