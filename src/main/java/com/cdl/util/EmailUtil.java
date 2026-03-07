@@ -18,7 +18,6 @@ public class EmailUtil {
         props.put("mail.smtp.starttls.enable", "true");
         props.put("mail.smtp.starttls.required", "true");
         props.put("mail.smtp.ssl.protocols", "TLSv1.2");
-
         props.put("mail.smtp.connectiontimeout", "10000");
         props.put("mail.smtp.timeout", "10000");
         props.put("mail.smtp.writetimeout", "10000");
@@ -31,17 +30,18 @@ public class EmailUtil {
         });
     }
 
-    // Méthode pour le mot de passe oublié (2 arguments : email et lien)
+    // Méthode pour le mot de passe oublié (2 arguments)
     public static boolean sendPasswordResetEmail(String recipientEmail, String resetLink) {
-        return sendEmail(recipientEmail, "Réinitialisation de mot de passe", "Voici votre lien : " + resetLink);
+        return sendEmail(recipientEmail, "Réinitialisation de mot de passe", 
+            "Bonjour, \n\nVoici votre lien de réinitialisation : " + resetLink);
     }
 
-    // Méthode pour l'inscription (2 arguments : email et code)
-    public static boolean sendVerificationEmail(String recipientEmail, String code) {
-        return sendEmail(recipientEmail, "Vérification de compte", "Votre code est : " + code);
+    // Méthode pour l'inscription (3 arguments pour corriger l'erreur de compilation)
+    public static boolean sendVerificationEmail(String recipientEmail, String code, String username) {
+        return sendEmail(recipientEmail, "Vérification de votre compte", 
+            "Bonjour " + username + ", \n\nVotre code de vérification est : " + code);
     }
 
-    // Fonction interne qui gère l'envoi réel
     private static boolean sendEmail(String recipientEmail, String subject, String content) {
         if (SENDER_EMAIL == null || SENDER_PASSWORD == null) return false;
         try {
