@@ -12,8 +12,10 @@ public class EmailUtil {
 
     private static Session getSession() {
         Properties props = new Properties();
-        props.put("mail.smtp.host", "smtp.gmail.com");
-        props.put("mail.smtp.port", "587");
+        
+        // --- NOUVEAUX PARAMÈTRES BREVO ---
+        props.put("mail.smtp.host", "smtp-relay.brevo.com");
+        props.put("mail.smtp.port", "2525"); // Le fameux port magique non bloqué par Railway !
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", "true");
         props.put("mail.smtp.starttls.required", "true");
@@ -30,13 +32,13 @@ public class EmailUtil {
         });
     }
 
-    // Méthode pour le mot de passe oublié (2 arguments)
+    // Méthode pour le mot de passe oublié
     public static boolean sendPasswordResetEmail(String recipientEmail, String resetLink) {
         return sendEmail(recipientEmail, "Réinitialisation de mot de passe", 
             "Bonjour, \n\nVoici votre lien de réinitialisation : " + resetLink);
     }
 
-    // Méthode pour l'inscription (3 arguments pour corriger l'erreur de compilation)
+    // Méthode pour l'inscription
     public static boolean sendVerificationEmail(String recipientEmail, String code, String username) {
         return sendEmail(recipientEmail, "Vérification de votre compte", 
             "Bonjour " + username + ", \n\nVotre code de vérification est : " + code);
@@ -46,7 +48,9 @@ public class EmailUtil {
         if (SENDER_EMAIL == null || SENDER_PASSWORD == null) return false;
         try {
             Message message = new MimeMessage(getSession());
-            message.setFrom(new InternetAddress(SENDER_EMAIL));
+            
+            // On ajoute "Support CDL" pour faire plus professionnel quand on reçoit l'email
+            message.setFrom(new InternetAddress(SENDER_EMAIL, "Support CDL"));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipientEmail));
             message.setSubject(subject);
             message.setText(content);
