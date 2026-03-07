@@ -7,15 +7,16 @@ import java.util.Properties;
 
 public class EmailUtil {
 
+    // Variables lues depuis l'onglet "Variables" de Railway
     private static final String SENDER_EMAIL = System.getenv("SENDER_EMAIL");
     private static final String SENDER_PASSWORD = System.getenv("SENDER_PASSWORD");
 
     private static Session getSession() {
         Properties props = new Properties();
         
-        // --- NOUVEAUX PARAMÈTRES BREVO ---
+        // --- NOUVELLE CONFIGURATION BREVO ---
         props.put("mail.smtp.host", "smtp-relay.brevo.com");
-        props.put("mail.smtp.port", "2525"); // Le fameux port magique non bloqué par Railway !
+        props.put("mail.smtp.port", "2525"); // Ce port traverse le blocage de Railway
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", "true");
         props.put("mail.smtp.starttls.required", "true");
@@ -32,28 +33,30 @@ public class EmailUtil {
         });
     }
 
-    // Méthode pour le mot de passe oublié
+    // Méthode pour le mot de passe oublié (2 arguments)
     public static boolean sendPasswordResetEmail(String recipientEmail, String resetLink) {
         return sendEmail(recipientEmail, "Réinitialisation de mot de passe", 
             "Bonjour, \n\nVoici votre lien de réinitialisation : " + resetLink);
     }
 
-    // Méthode pour l'inscription
+    // Méthode pour l'inscription (3 arguments)
     public static boolean sendVerificationEmail(String recipientEmail, String code, String username) {
         return sendEmail(recipientEmail, "Vérification de votre compte", 
             "Bonjour " + username + ", \n\nVotre code de vérification est : " + code);
     }
 
+    // Méthode principale d'envoi
     private static boolean sendEmail(String recipientEmail, String subject, String content) {
         if (SENDER_EMAIL == null || SENDER_PASSWORD == null) return false;
         try {
             Message message = new MimeMessage(getSession());
             
-            // On ajoute "Support CDL" pour faire plus professionnel quand on reçoit l'email
-            message.setFrom(new InternetAddress(SENDER_EMAIL, "Support CDL"));
+            // On met SENDER_EMAIL comme expéditeur (l'email validé sur Brevo)
+            message.setFrom(new InternetAddress(SENDER_EMAIL, "Support CDL Blog"));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipientEmail));
             message.setSubject(subject);
             message.setText(content);
+            
             Transport.send(message);
             return true;
         } catch (Exception e) {
