@@ -31,17 +31,17 @@ public class EmailUtil {
         });
     }
 
-    // Méthode 1 : Pour le mot de passe oublié
+    // METHODE 1 : Pour le mot de passe oublié
     public static boolean sendPasswordResetEmail(String recipientEmail, String resetLink) {
-        return sendEmail(recipientEmail, "Réinitialisation de mot de passe", "Lien : " + resetLink);
+        return sendEmail(recipientEmail, "Réinitialisation de mot de passe", "Voici votre lien : " + resetLink);
     }
 
-    // Méthode 2 : Pour la vérification d'inscription (Celle qui manquait !)
+    // METHODE 2 : Pour la vérification (Celle qui causait l'erreur FAILED)
     public static boolean sendVerificationEmail(String recipientEmail, String code) {
-        return sendEmail(recipientEmail, "Code de vérification", "Votre code est : " + code);
+        return sendEmail(recipientEmail, "Vérification de votre compte", "Votre code de vérification est : " + code);
     }
 
-    // Méthode générique pour éviter la répétition
+    // Service d'envoi commun
     private static boolean sendEmail(String recipientEmail, String subject, String content) {
         if (SENDER_EMAIL == null || SENDER_PASSWORD == null) return false;
         try {
